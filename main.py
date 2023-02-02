@@ -2,39 +2,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-# Create time array
+def gaussian_wave_packet(x, t, k, sigma, N=100):
+    omega = 2 * np.pi
+    a = np.zeros(2 * N)
+    g = np.zeros(x.shape, dtype=complex)
+    for n in range(-N, N):
+        a[n + N] = np.exp(-0.5 * sigma**2 * (n * omega - k)**2)
+        g += a[n + N] * np.exp(-1j * n * omega * t) * np.exp(-1j * n * omega * x)
+    g *= (2 * np.pi)**(-0.25)
+    return g
+
+x = np.linspace(-100, 1000, 1000)
 t = np.linspace(0, 10, 1000)
-
-# Define original wave packet
-def wave_packet(x, t, k, sigma):
-    return np.exp(-sigma**2 * (x - k * t)**2 + 1j * k * x)
-
-# Define shifted wave packet
-def shifted_wave_packet(x, t, k, sigma):
-    return np.exp(-sigma**2 * (x - k * t)**2 + 1j * k * x) * 1j
-
-def added_waves(x, t, k, sigma):
-    return 0.5 * wave_packet(x, t, k, sigma) + 0.5 * shifted_wave_packet(x, t, k, sigma)
-
-# Set up figure and axis
-fig, ax = plt.subplots()
-n_steps = 100
-x = np.linspace(-10, 100, n_steps)
-k = 10
+k = 100
 sigma = 0.1
-line1, = ax.plot(x, np.real(wave_packet(x, t[0], k, sigma)))
-line2, = ax.plot(x, np.real(shifted_wave_packet(x, t[0], k, sigma)))
-line3, = ax.plot(x, np.real(added_waves(x, t[0], k, sigma)))
 
+fig, ax = plt.subplots()
+line, = ax.plot(x, np.real(gaussian_wave_packet(x, t[0], k, sigma)))
 
-# Update function for animation
-def update(frame):
-    line1.set_ydata(np.real(wave_packet(x, t[frame], k, sigma)))
-    line2.set_ydata(np.real(shifted_wave_packet(x, t[frame], k, sigma)))
-    line3.set_ydata(np.real(added_waves(x, t[frame], k, sigma)))
+def update(i):
+    line.set_ydata(np.real(gaussian_wave_packet(x, t[i], k, sigma)))
+    return line,
 
-    return line1, line2
-
-# Animate the wave packets
-ani = FuncAnimation(fig, update, frames=range(n_steps), interval=100)
+ani = FuncAnimation(fig, update, frames=range(len(t)), interval=100, blit=True)
 plt.show()
